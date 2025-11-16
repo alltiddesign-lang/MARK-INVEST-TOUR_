@@ -804,23 +804,28 @@ body {
 </script> <script src="/assets/js/lenis.min.js"></script> <script src="/assets/js/gsap.min.js"></script> <script src="/assets/js/ScrollTrigger.min.js"></script> <script>
 
 document.addEventListener("DOMContentLoaded", async () => {
-// LENIS
-const lenis = new Lenis();
+// LENIS: отключаем на iOS (Safari) из‑за проблем со скроллом
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+let lenis = null;
 
-lenis.on('scroll', ScrollTrigger.update)
+if (!isIOS) {
+  lenis = new Lenis();
 
-gsap.ticker.add((time)=>{
-  lenis.raf(time * 1000)
-})
+  lenis.on('scroll', ScrollTrigger.update);
 
-gsap.ticker.lagSmoothing(0)
+  gsap.ticker.add((time) => {
+    lenis.raf(time * 1000);
+  });
 
-function raf(time) {
-  lenis.raf(time)
-  requestAnimationFrame(raf)
+  gsap.ticker.lagSmoothing(0);
+
+  function raf(time) {
+    lenis.raf(time);
+    requestAnimationFrame(raf);
+  }
+
+  requestAnimationFrame(raf);
 }
-
-requestAnimationFrame(raf)
 
 // GSAP 
 
