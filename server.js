@@ -120,6 +120,16 @@ app.get('/tour/:id', (req, res) => {
 });
 
 app.get('/all-tours.html', (req, res) => {
+  // Проверяем, является ли устройство iOS
+  const userAgent = req.headers['user-agent'] || '';
+  const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
+  
+  // Для iOS отдаём упрощённую версию
+  if (isIOS) {
+    return res.sendFile(path.join(__dirname, 'ios-all-tours.html'));
+  }
+  
+  // Для остальных устройств - обычная версия
   res.sendFile(path.join(__dirname, 'all-tours.html'));
 });
 

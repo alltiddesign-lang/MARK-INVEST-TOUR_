@@ -28,21 +28,38 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
       color: #ffffff;
       background: #050505;
-      background-image: linear-gradient(
+      background-image: url('/assets/images/hero_background-min.jpg');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: scroll;
+      position: relative;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
         180deg,
         rgba(5, 5, 5, 0.85) 0%,
         rgba(5, 5, 5, 0.75) 30%,
         rgba(5, 5, 5, 0.65) 50%,
         rgba(5, 5, 5, 0.75) 70%,
         rgba(5, 5, 5, 0.85) 100%
-      ),
-      url('/assets/images/hero_background-min.jpg');
-      background-size: cover;
-      background-position: center center;
-      background-repeat: no-repeat;
-      background-attachment: scroll;
-      -webkit-font-smoothing: antialiased;
-      line-height: 1.5;
+      );
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body > * {
+      position: relative;
+      z-index: 1;
     }
 
     /* Header */
@@ -431,6 +448,19 @@
     </p>
   </section>
 
+  <section class="tours-section">
+    <h2 class="section-title">Доступные туры</h2>
+    <div id="tours-container" class="tours-grid">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p style="margin-top: 16px;">Загрузка туров...</p>
+      </div>
+    </div>
+    <div style="text-align: center; margin-top: 32px;">
+      <a href="/all-tours.html" class="btn btn-primary" style="max-width: 300px; margin: 0 auto; display: inline-block;">Все туры</a>
+    </div>
+  </section>
+
   <section class="preorder-section">
     <h2 class="section-title">Предзаказ</h2>
     <div id="preorder-container" class="preorder-scroll">
@@ -441,12 +471,12 @@
     </div>
   </section>
 
-  <section class="tours-section">
-    <h2 class="section-title">Доступные туры</h2>
-    <div id="tours-container" class="tours-grid">
+  <section class="calendar-section">
+    <h2 class="section-title">Календарь туров</h2>
+    <div id="tour-calendar" class="calendar-container">
       <div class="loading">
         <div class="loading-spinner"></div>
-        <p style="margin-top: 16px;">Загрузка туров...</p>
+        <p style="margin-top: 16px;">Загрузка календаря...</p>
       </div>
     </div>
   </section>
@@ -672,9 +702,108 @@
       }
     }
 
+    // Загрузка календаря туров
+    async function loadCalendar() {
+      const container = document.getElementById('tour-calendar');
+      if (!container) return;
+
+      try {
+        const response = await fetch(`${API_URL}/tours?status=active`);
+        if (!response.ok) {
+          throw new Error('Ошибка загрузки туров');
+        }
+
+        const tours = await response.json();
+        renderCalendar(tours, container);
+      } catch (error) {
+        console.error('Ошибка загрузки календаря:', error);
+        container.innerHTML = '<p style="text-align: center; color: rgba(245,244,240,0.6); padding: 40px;">Ошибка загрузки календаря</p>';
+      }
+    }
+
+    // Рендеринг календаря
+    function renderCalendar(tours, container) {
+      // Группируем туры по датам
+      const toursByDate = {};
+      tours.forEach(tour => {
+        if (tour.date_start) {
+          const date = new Date(tour.date_start);
+          const dateKey = date.toISOString().split('T')[0];
+          if (!toursByDate[dateKey]) {
+            toursByDate[dateKey] = [];
+          }
+          toursByDate[dateKey].push(tour);
+        }
+      });
+
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+      const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+      const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+      let html = '<div class="calendar-months">';
+
+      // Генерируем календарь на 3 месяца вперед
+      for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
+        const month = new Date(currentYear, currentMonth + monthOffset, 1);
+        const monthIndex = month.getMonth();
+        const year = month.getFullYear();
+        const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+        const startingDayOfWeek = (month.getDay() + 6) % 7; // Понедельник = 0
+
+        html += `
+          <div class="calendar-month">
+            <div class="calendar-month-title">${months[monthIndex]} ${year}</div>
+            <div class="calendar-weekdays">
+              ${weekdays.map(day => `<div class="calendar-weekday">${day}</div>`).join('')}
+            </div>
+            <div class="calendar-days">
+        `;
+
+        // Пустые ячейки в начале месяца
+        for (let i = 0; i < startingDayOfWeek; i++) {
+          html += '<div class="calendar-day empty"></div>';
+        }
+
+        // Дни месяца
+        for (let day = 1; day <= daysInMonth; day++) {
+          const date = new Date(year, monthIndex, day);
+          const dateKey = date.toISOString().split('T')[0];
+          const isToday = date.toDateString() === today.toDateString();
+          const isPast = date < today && !isToday;
+          const toursOnDate = toursByDate[dateKey] || [];
+          const hasTours = toursOnDate.length > 0;
+
+          let dayClass = 'calendar-day';
+          if (isPast) dayClass += ' past';
+          if (isToday) dayClass += ' today';
+          if (hasTours) dayClass += ' has-tours';
+
+          const onClick = hasTours ? `onclick="window.location.href='/tour/${toursOnDate[0].id}'"` : '';
+
+          html += `<div class="${dayClass}" ${onClick}>`;
+          html += `<span class="calendar-day-number">${day}</span>`;
+          if (hasTours) {
+            html += `<div class="calendar-day-tours">${toursOnDate.length}</div>`;
+          }
+          html += '</div>';
+        }
+
+        html += `
+            </div>
+          </div>
+        `;
+      }
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
     // Инициализация при загрузке страницы
     document.addEventListener('DOMContentLoaded', () => {
       loadTours();
+      loadCalendar();
       initSubscriptionForm();
     });
   </script>
