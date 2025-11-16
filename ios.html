@@ -121,6 +121,11 @@
       height: 200px;
       object-fit: cover;
       display: block;
+      background: rgba(15,15,15,0.5);
+    }
+    
+    .tour-card-image[src=""] {
+      background: linear-gradient(135deg, rgba(255,75,75,0.2), rgba(255,122,69,0.2));
     }
 
     .tour-card-content {
@@ -419,9 +424,13 @@
         });
 
         container.innerHTML = sortedTours.map(tour => {
-          const imageUrl = tour.image 
-            ? (tour.image.startsWith('http') ? tour.image : `/uploads/${tour.image}`)
-            : '/assets/images/hero_background-min.jpg';
+          // Используем image_url из API, если есть, иначе image, иначе дефолтное
+          let imageUrl = '/assets/images/hero_background-min.jpg';
+          if (tour.image_url) {
+            imageUrl = tour.image_url.startsWith('http') ? tour.image_url : tour.image_url.startsWith('/') ? tour.image_url : `/${tour.image_url}`;
+          } else if (tour.image) {
+            imageUrl = tour.image.startsWith('http') ? tour.image : tour.image.startsWith('/') ? tour.image : `/uploads/${tour.image}`;
+          }
           
           const price = tour.price ? `${tour.price.toLocaleString('ru-RU')} ₽` : 'Цена по запросу';
           const dateStart = tour.date_start 
@@ -435,7 +444,7 @@
           
           return `
             <div class="tour-card" onclick="window.location.href='${tourUrl}'">
-              <img src="${imageUrl}" alt="${tour.title || 'Тур'}" class="tour-card-image" loading="lazy" />
+              <img src="${imageUrl}" alt="${tour.title || 'Тур'}" class="tour-card-image" loading="lazy" onerror="this.src='/assets/images/hero_background-min.jpg'" />
               <div class="tour-card-content">
                 <h3 class="tour-card-title">${tour.title || 'Тур'}</h3>
                 ${truncatedDesc ? `<p class="tour-card-description">${truncatedDesc}</p>` : ''}

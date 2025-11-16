@@ -501,9 +501,26 @@
       
       // Hero image
       const heroEl = document.getElementById('tour-hero');
-      if (heroEl && tour.image) {
-        const imageUrl = tour.image.startsWith('http') ? tour.image : `/uploads/${tour.image}`;
-        heroEl.style.backgroundImage = `url('${imageUrl}')`;
+      if (heroEl) {
+        let imageUrl = '/assets/images/hero_background-min.jpg';
+        if (tour.image_url) {
+          imageUrl = tour.image_url.startsWith('http') ? tour.image_url : tour.image_url.startsWith('/') ? tour.image_url : `/${tour.image_url}`;
+        } else if (tour.image) {
+          imageUrl = tour.image.startsWith('http') ? tour.image : tour.image.startsWith('/') ? tour.image : `/uploads/${tour.image}`;
+        }
+        
+        // Предзагружаем изображение для лучшего качества
+        const img = new Image();
+        img.onload = function() {
+          heroEl.style.backgroundImage = `url('${imageUrl}')`;
+          heroEl.classList.add('loaded');
+        };
+        img.onerror = function() {
+          // Fallback на дефолтное изображение
+          heroEl.style.backgroundImage = `url('/assets/images/hero_background-min.jpg')`;
+          heroEl.classList.add('loaded');
+        };
+        img.src = imageUrl;
       }
       
       // Title
@@ -576,13 +593,11 @@
         }
       }
       
-      // Gallery (упрощённая версия - только одно изображение)
+      // Gallery - загружаем из API
       const galleryEl = document.getElementById('tour-gallery');
       const gallerySection = document.getElementById('tour-gallery-section');
-      if (galleryEl && tour.image) {
-        const imageUrl = tour.image.startsWith('http') ? tour.image : `/uploads/${tour.image}`;
-        galleryEl.innerHTML = `<img src="${imageUrl}" alt="${tour.title}" class="tour-gallery-item" />`;
-        if (gallerySection) gallerySection.style.display = 'block';
+      if (galleryEl) {
+        loadTourGallery(tour.id, galleryEl, gallerySection);
       }
     }
 
@@ -647,6 +662,38 @@
           }
         }
       });
+    }
+
+    // Загрузка галереи изображений тура
+    async function loadTourGallery(tourId, galleryEl, gallerySection) {
+      try {
+        const response = await fetch(`${API_URL}/tours/${tourId}/images`);
+        if (!response.ok) {
+          // Если галереи нет, скрываем секцию
+          if (gallerySection) gallerySection.style.display = 'none';
+          return;
+        }
+        
+        const images = await response.json();
+        if (!images || images.length === 0) {
+          if (gallerySection) gallerySection.style.display = 'none';
+          return;
+        }
+        
+        // Отображаем изображения галереи
+        galleryEl.innerHTML = images.map((img, index) => {
+          const imageUrl = img.image_url ? (img.image_url.startsWith('http') ? img.image_url : img.image_url.startsWith('/') ? img.image_url : `/${img.image_url}`) : '';
+          if (!imageUrl) return '';
+          return `<img src="${imageUrl}" alt="Фото ${index + 1}" class="tour-gallery-item" loading="lazy" onerror="this.style.display='none'" />`;
+        }).filter(html => html).join('');
+        
+        if (galleryEl.innerHTML && gallerySection) {
+          gallerySection.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки галереи:', error);
+        if (gallerySection) gallerySection.style.display = 'none';
+      }
     }
 
     // Инициализация
