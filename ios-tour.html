@@ -319,6 +319,75 @@
     .contacts-link:active {
       opacity: 0.7;
     }
+
+    /* Programs Section */
+    .programs-scroll {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+      display: flex;
+      gap: 16px;
+      padding: 8px 0;
+    }
+
+    .programs-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .program-day {
+      flex: 0 0 85%;
+      background: rgba(15,15,15,0.86);
+      border: 1px solid rgba(245,244,240,0.18);
+      border-radius: 16px;
+      overflow: hidden;
+      scroll-snap-align: start;
+    }
+
+    .program-day-image {
+      width: 100%;
+      height: 200px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    .program-day-badges {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .program-day-badge {
+      background: rgba(5, 5, 5, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .program-day-content {
+      padding: 20px;
+    }
+
+    .program-day-description {
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(245,244,240,0.9);
+    }
+
+    .program-day-description p {
+      margin-bottom: 12px;
+    }
+
+    .program-day-description p:last-child {
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
@@ -359,6 +428,16 @@
       <div class="tour-section" id="tour-gallery-section" style="display: none;">
         <h2 class="tour-section-title">Галерея</h2>
         <div class="tour-gallery" id="tour-gallery"></div>
+      </div>
+
+      <div class="tour-section" id="tour-programs-section" style="display: none;">
+        <h2 class="tour-section-title">Программа тура</h2>
+        <div class="programs-scroll" id="programs-scroll">
+          <div class="loading">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 16px;">Загрузка программы...</p>
+          </div>
+        </div>
       </div>
 
       <div class="booking-section">
@@ -599,6 +678,9 @@
       if (galleryEl) {
         loadTourGallery(tour.id, galleryEl, gallerySection);
       }
+
+      // Programs - загружаем программу тура
+      loadTourPrograms(tour);
     }
 
     // Обработка формы бронирования
@@ -662,6 +744,71 @@
           }
         }
       });
+    }
+
+    // Загрузка программы тура
+    function loadTourPrograms(tour) {
+      const programsScroll = document.getElementById('programs-scroll');
+      const programsSection = document.getElementById('tour-programs-section');
+      
+      if (!programsScroll || !programsSection) return;
+
+      if (!tour.programs || tour.programs.length === 0) {
+        programsSection.style.display = 'none';
+        return;
+      }
+
+      // Сортируем программы по номеру дня
+      const sortedPrograms = [...tour.programs].sort((a, b) => (a.day || 0) - (b.day || 0));
+
+      // Используем изображение тура
+      let imageUrl = '/assets/images/hero_background-min.jpg';
+      if (tour.image_url) {
+        imageUrl = tour.image_url.startsWith('http') ? tour.image_url : tour.image_url.startsWith('/') ? tour.image_url : `/${tour.image_url}`;
+      } else if (tour.image) {
+        imageUrl = tour.image.startsWith('http') ? tour.image : tour.image.startsWith('/') ? tour.image : `/uploads/${tour.image}`;
+      }
+
+      // Вычисляем даты для каждого дня
+      const startDate = tour.date_start ? new Date(tour.date_start) : null;
+
+      programsScroll.innerHTML = sortedPrograms.map((program, index) => {
+        // Вычисляем дату для этого дня
+        let dayDate = '';
+        if (startDate) {
+          const programDate = new Date(startDate);
+          programDate.setDate(programDate.getDate() + (program.day - 1));
+          dayDate = programDate.toLocaleDateString('ru-RU', { 
+            day: 'numeric', 
+            month: 'long' 
+          });
+        }
+
+        // Разбиваем текст программы на параграфы
+        const programText = program.programm || '';
+        const paragraphs = programText.split(/\n\n|\n/).filter(p => p.trim());
+
+        return `
+          <div class="program-day">
+            <div class="program-day-image" style="background-image: url('${imageUrl}');">
+              <div class="program-day-badges">
+                <div class="program-day-badge">День ${program.day || index + 1}</div>
+                ${dayDate ? `<div class="program-day-badge">${dayDate}</div>` : ''}
+              </div>
+            </div>
+            <div class="program-day-content">
+              <div class="program-day-description">
+                ${paragraphs.length > 0 
+                  ? paragraphs.map(p => `<p>${p.trim()}</p>`).join('')
+                  : `<p>${programText}</p>`
+                }
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      programsSection.style.display = 'block';
     }
 
     // Загрузка галереи изображений тура

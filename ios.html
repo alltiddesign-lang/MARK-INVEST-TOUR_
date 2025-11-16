@@ -28,6 +28,19 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
       color: #ffffff;
       background: #050505;
+      background-image: linear-gradient(
+        180deg,
+        rgba(5, 5, 5, 0.85) 0%,
+        rgba(5, 5, 5, 0.75) 30%,
+        rgba(5, 5, 5, 0.65) 50%,
+        rgba(5, 5, 5, 0.75) 70%,
+        rgba(5, 5, 5, 0.85) 100%
+      ),
+      url('/assets/images/hero_background-min.jpg');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: scroll;
       -webkit-font-smoothing: antialiased;
       line-height: 1.5;
     }
@@ -82,10 +95,81 @@
       margin-bottom: 24px;
     }
 
+    .preorder-section {
+      padding: 48px 0 48px 16px;
+      background: rgba(5, 5, 5, 0.3);
+    }
+
+    .preorder-scroll {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+      display: flex;
+      gap: 16px;
+      padding-right: 16px;
+    }
+
+    .preorder-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .preorder-card {
+      flex: 0 0 300px;
+      background: rgba(15,15,15,0.86);
+      border: 1px solid rgba(245,244,240,0.18);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      scroll-snap-align: start;
+      -webkit-tap-highlight-color: rgba(255, 75, 75, 0.2);
+    }
+
+    .preorder-card:active {
+      transform: scale(0.98);
+    }
+
+    .preorder-card-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      display: block;
+      background: rgba(15,15,15,0.5);
+    }
+
+    .preorder-card-content {
+      padding: 20px;
+    }
+
+    .preorder-card-date {
+      font-size: 12px;
+      color: rgba(245,244,240,0.6);
+      margin-bottom: 8px;
+    }
+
+    .preorder-card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    .preorder-card-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #ff4b4b, #ff7a45);
+      color: #ffffff;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-top: 8px;
+    }
+
     /* Tours Section */
     .tours-section {
       padding: 48px 16px;
-      background: #050505;
+      background: rgba(5, 5, 5, 0.3);
     }
 
     .section-title {
@@ -347,6 +431,16 @@
     </p>
   </section>
 
+  <section class="preorder-section">
+    <h2 class="section-title">Предзаказ</h2>
+    <div id="preorder-container" class="preorder-scroll">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p style="margin-top: 16px;">Загрузка туров...</p>
+      </div>
+    </div>
+  </section>
+
   <section class="tours-section">
     <h2 class="section-title">Доступные туры</h2>
     <div id="tours-container" class="tours-grid">
@@ -423,6 +517,10 @@
           return dateA - dateB;
         });
 
+        // Загружаем туры в предзаказ (первые 5)
+        loadPreorderTours(sortedTours.slice(0, 5));
+
+        // Загружаем все туры в основную сетку
         container.innerHTML = sortedTours.map(tour => {
           // Используем image_url из API, если есть, иначе image, иначе дефолтное
           let imageUrl = '/assets/images/hero_background-min.jpg';
@@ -466,6 +564,43 @@
           </div>
         `;
       }
+    }
+
+    // Загрузка туров в раздел предзаказа
+    function loadPreorderTours(tours) {
+      const container = document.getElementById('preorder-container');
+      if (!container) return;
+
+      if (!tours || tours.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: rgba(245,244,240,0.6); padding: 40px;">Туры для предзаказа отсутствуют</p>';
+        return;
+      }
+
+      container.innerHTML = tours.map(tour => {
+        let imageUrl = '/assets/images/hero_background-min.jpg';
+        if (tour.image_url) {
+          imageUrl = tour.image_url.startsWith('http') ? tour.image_url : tour.image_url.startsWith('/') ? tour.image_url : `/${tour.image_url}`;
+        } else if (tour.image) {
+          imageUrl = tour.image.startsWith('http') ? tour.image : tour.image.startsWith('/') ? tour.image : `/uploads/${tour.image}`;
+        }
+
+        const dateStart = tour.date_start 
+          ? new Date(tour.date_start).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+          : 'Дата уточняется';
+
+        const tourUrl = tour.id ? `/tour/${tour.id}` : '#';
+
+        return `
+          <div class="preorder-card" onclick="window.location.href='${tourUrl}'">
+            <img src="${imageUrl}" alt="${tour.title || 'Тур'}" class="preorder-card-image" loading="lazy" onerror="this.src='/assets/images/hero_background-min.jpg'" />
+            <div class="preorder-card-content">
+              <div class="preorder-card-date">${dateStart}</div>
+              <h3 class="preorder-card-title">${tour.title || 'Тур'}</h3>
+              <a href="${tourUrl}" class="preorder-card-btn" onclick="event.stopPropagation(); window.location.href='${tourUrl}'">Предзаказ</a>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     // Обработка формы подписки
