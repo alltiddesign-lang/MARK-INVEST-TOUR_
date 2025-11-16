@@ -1,6 +1,7 @@
 // Загрузка и отображение данных тура на странице
 
-const API_URL = '/api';
+// Используем глобальный API_URL, инициализированный в api-integration.js
+const API_URL = window.API_URL || '/api';
 
 // Функция отображения ошибки
 function showError(message) {
