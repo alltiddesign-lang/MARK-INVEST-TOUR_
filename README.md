@@ -1,105 +1,168 @@
-# MARK INVEST TOUR Website Replica
+# MARK INVEST TOUR
 
-This is a pixel-perfect replica of the website https://afisha.neverend.travel/
+Веб-сайт для туристического агентства MARK INVEST TOUR с админ-панелью и API.
 
-## What's Included
+## 🚀 Возможности
 
-### ✅ Completed Features
+### Frontend
+- ✅ Адаптивный дизайн для всех устройств
+- ✅ Специальная версия для iOS устройств
+- ✅ Анимации на GSAP
+- ✅ Плавная прокрутка (Lenis)
+- ✅ Слайдеры (Swiper)
+- ✅ Формы обратной связи
+- ✅ Галерея изображений
+- ✅ Календарь туров
 
-1. **HTML Structure**: Complete HTML structure extracted and processed from the original website
-2. **CSS Files**: All Tilda CMS CSS files downloaded and linked locally:
-   - Tilda Grid system
-   - Tilda Animation styles
-   - Tilda Sliders styles
-   - Tilda Cards styles
-   - Tilda Popup styles
-   - Tilda Forms styles
-   - Swiper CSS
+### Backend
+- ✅ RESTful API на Express.js
+- ✅ Админ-панель для управления турами
+- ✅ База данных SQLite
+- ✅ JWT аутентификация
+- ✅ Email уведомления (SMTP)
+- ✅ Кэширование Redis (опционально)
+- ✅ Swagger API документация
+- ✅ Логирование запросов
+- ✅ Rate limiting
+- ✅ Загрузка и обработка изображений
 
-3. **JavaScript Libraries**: All required libraries downloaded and linked locally:
-   - Lenis (smooth scrolling)
-   - GSAP (animations)
-   - ScrollTrigger (scroll-based animations)
-   - Swiper (sliders/carousels)
-   - jQuery
-   - All Tilda CMS JavaScript modules
+## 📋 Технологии
 
-4. **Animations**: All GSAP animations preserved:
-   - Hero section animations (headline, circle, travel grid)
-   - Travel card scroll animations
-   - Smooth scrolling with Lenis
+- **Frontend**: HTML, CSS, JavaScript, GSAP, Swiper, Lenis
+- **Backend**: Node.js, Express.js
+- **База данных**: SQLite3
+- **Кэширование**: Redis (опционально)
+- **Аутентификация**: JWT
+- **Email**: Nodemailer
+- **Документация**: Swagger
 
-5. **Sliders**: Swiper sliders for:
-   - Preorder cards carousel
-   - Navigation controls
+## 🛠️ Установка
 
-6. **Images**: All image URLs replaced with local paths (images downloaded to `assets/images/`)
+### Предварительные требования
 
-7. **Forms**: All form functionality preserved with Tilda Forms
+- Node.js 16+ и npm
+- Git
 
-8. **Modals/Popups**: Popup functionality for preorder forms
+### Шаги установки
 
-## File Structure
-
-```
-neverend-travel/
-├── index.html              # Main HTML file (processed from original)
-├── index_original.html     # Original downloaded HTML
-├── assets/
-│   ├── css/               # All CSS files
-│   ├── js/                # All JavaScript files
-│   └── images/            # All images
-├── download_resources.ps1  # Script to download resources
-├── download_tilda_resources.ps1  # Script to download Tilda resources
-├── process_html_complete.ps1    # Script to process HTML
-└── download_all_images.ps1      # Script to download images
-```
-
-## How to Use
-
-1. **Open the website**: Simply open `index.html` in a web browser
-2. **Local Server (Recommended)**: For best results, serve the files through a local web server:
-   ```powershell
-   # Using Python
-   python -m http.server 8000
-   
-   # Using Node.js http-server
-   npx http-server
-   
-   # Using PHP
-   php -S localhost:8000
+1. **Клонируйте репозиторий:**
+   ```bash
+   git clone https://github.com/AlltidTrist/MARK-INVEST-TOUR_.git
+   cd MARK-INVEST-TOUR
    ```
 
-3. **Access**: Navigate to `http://localhost:8000` in your browser
+2. **Установите зависимости:**
+   ```bash
+   npm install
+   ```
 
-## Features Replicated
+3. **Создайте файл `.env`:**
+   ```env
+   PORT=3000
+   JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters-long
+   NODE_ENV=development
+   ```
 
-- ✅ Hero section with animations
-- ✅ Travel destination cards with hover effects
-- ✅ Smooth scrolling (Lenis)
-- ✅ GSAP scroll-triggered animations
-- ✅ Swiper carousels
-- ✅ Modal popups for forms
-- ✅ Form functionality
-- ✅ Responsive design
-- ✅ All animations and interactions
+4. **Запустите сервер:**
+   ```bash
+   # Режим разработки (с автоперезагрузкой)
+   npm run dev
+   
+   # Или production режим
+   npm start
+   ```
 
-## Notes
+5. **Откройте в браузере:**
+   - Сайт: http://localhost:3000
+   - Админ-панель: http://localhost:3000/admin
+     - Логин: `admin`
+     - Пароль: `admin123` (⚠️ **СМЕНИТЕ ПАРОЛЬ!**)
 
-- All external URLs have been replaced with local paths
-- Tracking scripts (Yandex Metrika, Google Tag Manager, etc.) are still present in the HTML but won't function without their respective services
-- Some images may need to be downloaded if they weren't captured in the initial download
-- The site uses Tilda CMS framework, so all Tilda-specific functionality is preserved
+## 📚 Документация
 
-## Browser Compatibility
+- **[QUICK_START.md](QUICK_START.md)** - Быстрый старт
+- **[RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md)** - Деплой на Railway.com
+- **[GITHUB_SETUP.md](GITHUB_SETUP.md)** - Настройка GitHub репозитория
+- **[ENV_VARIABLES.md](ENV_VARIABLES.md)** - Справочник переменных окружения
+- **[QUICK_DEPLOY.md](QUICK_DEPLOY.md)** - Быстрый деплой
+- **[INSTALL.md](INSTALL.md)** - Подробная инструкция по установке
 
-The site should work in all modern browsers that support:
-- ES6 JavaScript
-- CSS Grid
-- CSS Flexbox
-- Intersection Observer API
+## 🌐 Деплой
 
-## Original Website
+### Railway.com
 
-Original: https://afisha.neverend.travel/
+Проект готов к деплою на Railway.com. Следуйте инструкциям в [RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md).
 
+**Быстрый деплой:**
+1. Создайте проект на [Railway.com](https://railway.com)
+2. Подключите GitHub репозиторий
+3. Настройте переменные окружения (см. [ENV_VARIABLES.md](ENV_VARIABLES.md))
+4. Railway автоматически задеплоит приложение
+
+## 📡 API Endpoints
+
+### Публичные
+
+- `GET /api/tours` - Получить все туры
+- `GET /api/tours/:id` - Получить тур по ID
+- `POST /api/applications` - Создать заявку
+- `POST /api/subscriptions` - Подписаться на рассылку
+- `GET /api/health` - Проверка здоровья сервера
+
+### Административные (требуют авторизации)
+
+- `GET /api/admin/tours` - Список всех туров
+- `POST /api/admin/tours` - Создать тур
+- `PUT /api/admin/tours/:id` - Обновить тур
+- `DELETE /api/admin/tours/:id` - Удалить тур
+- `GET /api/admin/applications` - Список заявок
+- `GET /api/admin/analytics` - Аналитика
+
+**Полная документация API:** http://localhost:3000/api-docs (Swagger)
+
+## 🗂️ Структура проекта
+
+```
+MARK-INVEST-TOUR/
+├── server/                 # Backend код
+│   ├── config/            # Конфигурация (БД, Redis, Email, etc.)
+│   ├── controllers/       # Контроллеры API
+│   ├── middleware/        # Middleware (auth, error, logger, etc.)
+│   ├── models/           # Модели данных
+│   ├── routes/           # API маршруты
+│   ├── services/         # Бизнес-логика
+│   └── utils/            # Утилиты
+├── admin/                # Админ-панель
+├── public/               # Публичные статические файлы
+├── assets/               # CSS, JS, изображения
+├── server.js             # Главный файл сервера
+├── index.html            # Главная страница
+├── ios.html              # Версия для iOS
+└── travel.db             # База данных SQLite
+```
+
+## 🔐 Безопасность
+
+- JWT аутентификация для админ-панели
+- Rate limiting для API
+- Helmet.js для безопасности HTTP заголовков
+- Валидация входных данных
+- Хеширование паролей (bcrypt)
+- CORS настройки
+
+## 📝 Лицензия
+
+ISC
+
+## 👤 Автор
+
+AlltidTrist
+
+## 🔗 Ссылки
+
+- **GitHub**: https://github.com/AlltidTrist/MARK-INVEST-TOUR_
+- **Railway**: https://railway.app
+
+---
+
+**Примечание:** После первого запуска обязательно смените пароль администратора!
