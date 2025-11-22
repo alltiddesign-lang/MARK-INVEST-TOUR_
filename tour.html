@@ -382,6 +382,67 @@
     color: #ffffff;
   }
 
+  .tour-detail-item-full {
+    grid-column: 1 / -1;
+  }
+
+  /* Стили для включений/исключений */
+  .tour-inclusions-wrapper {
+    padding: 32px;
+  }
+
+  .tour-inclusions-label {
+    margin-bottom: 24px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+  }
+
+  .tour-inclusions-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .tour-inclusion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  .tour-inclusion-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(4px);
+  }
+
+  .tour-inclusion-item-included .tour-inclusion-icon {
+    color: #4CAF50;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .tour-inclusion-item-excluded .tour-inclusion-icon {
+    color: #FF5252;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .tour-inclusion-item span {
+    font-size: 16px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+    flex: 1;
+  }
+
   .tour-booking {
     margin: 80px auto 0;
     max-width: 640px;
@@ -842,6 +903,24 @@
       padding: 20px;
     }
 
+    .tour-inclusions-wrapper {
+      padding: 24px;
+    }
+
+    .tour-inclusion-item {
+      padding: 12px 16px;
+      gap: 10px;
+    }
+
+    .tour-inclusion-item span {
+      font-size: 15px;
+    }
+
+    .tour-inclusion-icon {
+      width: 18px;
+      height: 18px;
+    }
+
     .tour-programs {
       padding: 0 20px;
       margin: 40px auto;
@@ -1009,6 +1088,31 @@
     .tour-meta-item {
       width: 100%;
       text-align: left;
+    }
+
+    .tour-inclusions-wrapper {
+      padding: 20px;
+    }
+
+    .tour-inclusion-item {
+      padding: 10px 14px;
+      gap: 8px;
+    }
+
+    .tour-inclusion-item span {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .tour-inclusion-icon {
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+    }
+
+    .tour-inclusions-label {
+      font-size: 14px;
+      margin-bottom: 16px;
     }
   }
 </style>

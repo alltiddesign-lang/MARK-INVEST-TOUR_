@@ -412,29 +412,39 @@ function displayTourData(tour) {
             const excluded = tour.inclusions.filter(inc => inc.type === 'excluded');
             
             if (included.length > 0) {
-                const includedItems = included.map(inc => `<li>${inc.item}</li>`).join('');
+                const includedItems = included.map(inc => `
+                    <li class="tour-inclusion-item tour-inclusion-item-included">
+                        <svg class="tour-inclusion-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z" fill="currentColor"/>
+                        </svg>
+                        <span>${inc.item}</span>
+                    </li>
+                `).join('');
                 details.push(`
-                    <div class="tour-detail-item tour-detail-item-full">
-                        <div class="tour-detail-label">Что входит в тур</div>
-                        <div class="tour-detail-value">
-                            <ul style="margin: 0; padding-left: 20px; list-style: disc;">
-                                ${includedItems}
-                            </ul>
-                        </div>
+                    <div class="tour-detail-item tour-detail-item-full tour-inclusions-wrapper">
+                        <div class="tour-detail-label tour-inclusions-label">Что входит в тур</div>
+                        <ul class="tour-inclusions-list tour-inclusions-list-included">
+                            ${includedItems}
+                        </ul>
                     </div>
                 `);
             }
             
             if (excluded.length > 0) {
-                const excludedItems = excluded.map(inc => `<li>${inc.item}</li>`).join('');
+                const excludedItems = excluded.map(inc => `
+                    <li class="tour-inclusion-item tour-inclusion-item-excluded">
+                        <svg class="tour-inclusion-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>${inc.item}</span>
+                    </li>
+                `).join('');
                 details.push(`
-                    <div class="tour-detail-item tour-detail-item-full">
-                        <div class="tour-detail-label">Не входит в тур</div>
-                        <div class="tour-detail-value">
-                            <ul style="margin: 0; padding-left: 20px; list-style: disc;">
-                                ${excludedItems}
-                            </ul>
-                        </div>
+                    <div class="tour-detail-item tour-detail-item-full tour-inclusions-wrapper">
+                        <div class="tour-detail-label tour-inclusions-label">Не входит в тур</div>
+                        <ul class="tour-inclusions-list tour-inclusions-list-excluded">
+                            ${excludedItems}
+                        </ul>
                     </div>
                 `);
             }

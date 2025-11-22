@@ -69,11 +69,71 @@ class Tour {
     query += ' ORDER BY date_start ASC, created_at DESC';
     
     return new Promise((resolve, reject) => {
-      db.all(query, params, (err, tours) => {
+      db.all(query, params, async (err, tours) => {
         if (err) {
           reject(err);
         } else {
-          resolve(tours || []);
+          if (!tours || tours.length === 0) {
+            resolve([]);
+            return;
+          }
+          
+          // Загружаем включения/исключения и цены для всех туров одним запросом (более эффективно)
+          const tourIds = tours.map(t => t.id);
+          const placeholders = tourIds.map(() => '?').join(',');
+          
+          // Получаем все включения
+          db.all(
+            `SELECT * FROM tour_inclusions WHERE tour_id IN (${placeholders}) ORDER BY tour_id, type ASC, id ASC`,
+            tourIds,
+            (err, inclusions) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+              
+              // Получаем все цены
+              db.all(
+                `SELECT * FROM tour_prices WHERE tour_id IN (${placeholders}) ORDER BY tour_id, price_order ASC, price ASC`,
+                tourIds,
+                (err, prices) => {
+                  if (err) {
+                    reject(err);
+                    return;
+                  }
+                  
+                  // Группируем включения и цены по tour_id
+                  const inclusionsByTour = {};
+                  if (inclusions) {
+                    inclusions.forEach(inc => {
+                      if (!inclusionsByTour[inc.tour_id]) {
+                        inclusionsByTour[inc.tour_id] = [];
+                      }
+                      inclusionsByTour[inc.tour_id].push(inc);
+                    });
+                  }
+                  
+                  const pricesByTour = {};
+                  if (prices) {
+                    prices.forEach(price => {
+                      if (!pricesByTour[price.tour_id]) {
+                        pricesByTour[price.tour_id] = [];
+                      }
+                      pricesByTour[price.tour_id].push(price);
+                    });
+                  }
+                  
+                  // Добавляем включения и цены к каждому туру
+                  tours.forEach(tour => {
+                    tour.inclusions = inclusionsByTour[tour.id] || [];
+                    tour.prices = pricesByTour[tour.id] || [];
+                  });
+                  
+                  resolve(tours);
+                }
+              );
+            }
+          );
         }
       });
     });

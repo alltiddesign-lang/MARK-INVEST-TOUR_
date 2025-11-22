@@ -715,6 +715,83 @@ function createTravelCard(tour) {
         descDiv.textContent = tour.short_description;
         contentDiv.appendChild(descDiv);
     }
+
+    // Включения/исключения (компактный вид)
+    if (tour.inclusions && tour.inclusions.length > 0) {
+        const included = tour.inclusions.filter(inc => inc.type === 'included').slice(0, 3); // Показываем максимум 3 пункта
+        const excluded = tour.inclusions.filter(inc => inc.type === 'excluded').slice(0, 2); // Показываем максимум 2 пункта
+        
+        if (included.length > 0 || excluded.length > 0) {
+            const inclusionsDiv = document.createElement('div');
+            inclusionsDiv.className = 'tour-card-inclusions';
+            inclusionsDiv.style.cssText = 'margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1);';
+            
+            if (included.length > 0) {
+                const includedSection = document.createElement('div');
+                includedSection.className = 'tour-card-inclusions-section';
+                includedSection.style.cssText = 'margin-bottom: 8px;';
+                
+                const includedLabel = document.createElement('div');
+                includedLabel.className = 'tour-card-inclusions-label';
+                includedLabel.style.cssText = 'font-size: 11px; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 500;';
+                includedLabel.textContent = 'Входит:';
+                includedSection.appendChild(includedLabel);
+                
+                const includedList = document.createElement('div');
+                includedList.className = 'tour-card-inclusions-list';
+                includedList.style.cssText = 'display: flex; flex-wrap: wrap; gap: 6px;';
+                
+                included.forEach(inc => {
+                    const item = document.createElement('span');
+                    item.className = 'tour-card-inclusion-item tour-card-inclusion-item-included';
+                    item.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: rgba(76, 175, 80, 0.9); padding: 2px 8px; background: rgba(76, 175, 80, 0.1); border-radius: 6px;';
+                    item.innerHTML = `
+                        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                            <path d="M16.7071 5.29289C17.0976 5.68342 17.0976 6.31658 16.7071 6.70711L8.70711 14.7071C8.31658 15.0976 7.68342 15.0976 7.29289 14.7071L3.29289 10.7071C2.90237 10.3166 2.90237 9.68342 3.29289 9.29289C3.68342 8.90237 4.31658 8.90237 4.70711 9.29289L8 12.5858L15.2929 5.29289C15.6834 4.90237 16.3166 4.90237 16.7071 5.29289Z" fill="currentColor"/>
+                        </svg>
+                        <span>${inc.item}</span>
+                    `;
+                    includedList.appendChild(item);
+                });
+                
+                includedSection.appendChild(includedList);
+                inclusionsDiv.appendChild(includedSection);
+            }
+            
+            if (excluded.length > 0) {
+                const excludedSection = document.createElement('div');
+                excludedSection.className = 'tour-card-inclusions-section';
+                
+                const excludedLabel = document.createElement('div');
+                excludedLabel.className = 'tour-card-inclusions-label';
+                excludedLabel.style.cssText = 'font-size: 11px; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 500;';
+                excludedLabel.textContent = 'Не входит:';
+                excludedSection.appendChild(excludedLabel);
+                
+                const excludedList = document.createElement('div');
+                excludedList.className = 'tour-card-inclusions-list';
+                excludedList.style.cssText = 'display: flex; flex-wrap: wrap; gap: 6px;';
+                
+                excluded.forEach(inc => {
+                    const item = document.createElement('span');
+                    item.className = 'tour-card-inclusion-item tour-card-inclusion-item-excluded';
+                    item.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: rgba(255, 82, 82, 0.9); padding: 2px 8px; background: rgba(255, 82, 82, 0.1); border-radius: 6px;';
+                    item.innerHTML = `
+                        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                            <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>${inc.item}</span>
+                    `;
+                    excludedList.appendChild(item);
+                });
+                
+                excludedSection.appendChild(excludedList);
+                inclusionsDiv.appendChild(excludedSection);
+            }
+            
+            contentDiv.appendChild(inclusionsDiv);
+        }
+    }
     
     // Собираем карточку
     card.appendChild(imageDiv);
