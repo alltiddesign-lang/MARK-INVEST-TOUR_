@@ -282,20 +282,38 @@ function displayTourData(tour) {
         console.error('Элемент tour-meta не найден');
     }
     
-    // Цена - сохраняем оригинальную цену в рублях
+    // Цена - показываем несколько цен или базовую цену
     const priceContainer = document.getElementById('tour-price');
     if (priceContainer) {
-        if (tour.price) {
-            // Сохраняем оригинальную цену в рублях в data-атрибуте
+        // Если есть несколько цен, показываем их
+        if (tour.prices && tour.prices.length > 0) {
+            const pricesHTML = tour.prices.map(priceItem => {
+                const price = priceItem.price || 0;
+                const description = priceItem.description ? ` - ${priceItem.description}` : '';
+                const formattedPrice = price.toLocaleString('ru-RU') + ' ₽';
+                return `<div class="tour-price-item">${formattedPrice}${description}</div>`;
+            }).join('');
+            
+            priceContainer.innerHTML = pricesHTML;
+            priceContainer.style.display = 'block';
+            priceContainer.className = 'tour-price tour-price-multiple';
+            console.log('Цены установлены, количество:', tour.prices.length);
+        } else if (tour.price) {
+            // Используем базовую цену для обратной совместимости
             priceContainer.dataset.priceRub = tour.price;
             
             // Получаем сохранённую валюту или используем RUB по умолчанию
             const currentCurrency = localStorage.getItem('tourSelectedCurrency') || 'RUB';
             
             // Обновляем отображение цены
-            updateTourPrice(priceContainer, tour.price, currentCurrency);
+            if (typeof updateTourPrice === 'function') {
+                updateTourPrice(priceContainer, tour.price, currentCurrency);
+            } else {
+                priceContainer.textContent = tour.price.toLocaleString('ru-RU') + ' ₽';
+            }
             
             priceContainer.style.display = 'block';
+            priceContainer.className = 'tour-price';
             console.log('Цена установлена:', tour.price);
         } else {
             priceContainer.style.display = 'none';
@@ -386,6 +404,40 @@ function displayTourData(tour) {
                     <div class="tour-detail-value">${days}</div>
                 </div>
             `);
+        }
+        
+        // Добавляем включения/исключения в детали
+        if (tour.inclusions && tour.inclusions.length > 0) {
+            const included = tour.inclusions.filter(inc => inc.type === 'included');
+            const excluded = tour.inclusions.filter(inc => inc.type === 'excluded');
+            
+            if (included.length > 0) {
+                const includedItems = included.map(inc => `<li>${inc.item}</li>`).join('');
+                details.push(`
+                    <div class="tour-detail-item tour-detail-item-full">
+                        <div class="tour-detail-label">Что входит в тур</div>
+                        <div class="tour-detail-value">
+                            <ul style="margin: 0; padding-left: 20px; list-style: disc;">
+                                ${includedItems}
+                            </ul>
+                        </div>
+                    </div>
+                `);
+            }
+            
+            if (excluded.length > 0) {
+                const excludedItems = excluded.map(inc => `<li>${inc.item}</li>`).join('');
+                details.push(`
+                    <div class="tour-detail-item tour-detail-item-full">
+                        <div class="tour-detail-label">Не входит в тур</div>
+                        <div class="tour-detail-value">
+                            <ul style="margin: 0; padding-left: 20px; list-style: disc;">
+                                ${excludedItems}
+                            </ul>
+                        </div>
+                    </div>
+                `);
+            }
         }
         
         if (details.length > 0) {

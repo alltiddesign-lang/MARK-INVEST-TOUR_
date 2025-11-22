@@ -158,6 +158,27 @@ function createTables() {
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`,
+      
+      // Таблица включений/исключений тура
+      `CREATE TABLE IF NOT EXISTS tour_inclusions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tour_id INTEGER NOT NULL,
+        item TEXT NOT NULL,
+        type TEXT NOT NULL CHECK(type IN ('included', 'excluded')),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
+      )`,
+      
+      // Таблица цен тура
+      `CREATE TABLE IF NOT EXISTS tour_prices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tour_id INTEGER NOT NULL,
+        price INTEGER NOT NULL,
+        description TEXT,
+        price_order INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
       )`
     ];
 

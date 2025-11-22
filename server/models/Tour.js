@@ -100,7 +100,25 @@ class Tour {
               reject(err);
             } else {
               tour.programs = programs || [];
-              resolve(tour);
+              
+              // Получаем включения/исключения
+              db.all('SELECT * FROM tour_inclusions WHERE tour_id = ? ORDER BY type ASC, id ASC', [id], (err, inclusions) => {
+                if (err) {
+                  reject(err);
+                } else {
+                  tour.inclusions = inclusions || [];
+                  
+                  // Получаем цены
+                  db.all('SELECT * FROM tour_prices WHERE tour_id = ? ORDER BY price_order ASC, price ASC', [id], (err, prices) => {
+                    if (err) {
+                      reject(err);
+                    } else {
+                      tour.prices = prices || [];
+                      resolve(tour);
+                    }
+                  });
+                }
+              });
             }
           });
         }
@@ -289,6 +307,114 @@ class Tour {
             } else {
               completed++;
               if (completed === programs.length && !hasError) {
+                stmt.finalize();
+                resolve();
+              }
+            }
+          });
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  /**
+   * Сохранить включения/исключения тура
+   * @param {number} tourId
+   * @param {Array} inclusions - Массив объектов {item: string, type: 'included'|'excluded'}
+   * @returns {Promise<void>}
+   */
+  static async saveInclusions(tourId, inclusions) {
+    const db = getDatabase();
+    
+    return new Promise((resolve, reject) => {
+      // Удаляем старые включения/исключения
+      db.run('DELETE FROM tour_inclusions WHERE tour_id = ?', [tourId], (err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        
+        // Добавляем новые включения/исключения
+        if (inclusions && inclusions.length > 0) {
+          const stmt = db.prepare('INSERT INTO tour_inclusions (tour_id, item, type) VALUES (?, ?, ?)');
+          let completed = 0;
+          let hasError = false;
+          
+          inclusions.forEach(inclusion => {
+            if (inclusion.item && inclusion.type && (inclusion.type === 'included' || inclusion.type === 'excluded')) {
+              stmt.run([tourId, inclusion.item.trim(), inclusion.type], (err) => {
+                if (err && !hasError) {
+                  hasError = true;
+                  reject(err);
+                } else {
+                  completed++;
+                  if (completed === inclusions.length && !hasError) {
+                    stmt.finalize();
+                    resolve();
+                  }
+                }
+              });
+            } else {
+              completed++;
+              if (completed === inclusions.length && !hasError) {
+                stmt.finalize();
+                resolve();
+              }
+            }
+          });
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  /**
+   * Сохранить цены тура
+   * @param {number} tourId
+   * @param {Array} prices - Массив объектов {price: number, description: string, price_order: number}
+   * @returns {Promise<void>}
+   */
+  static async savePrices(tourId, prices) {
+    const db = getDatabase();
+    
+    return new Promise((resolve, reject) => {
+      // Удаляем старые цены
+      db.run('DELETE FROM tour_prices WHERE tour_id = ?', [tourId], (err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        
+        // Добавляем новые цены
+        if (prices && prices.length > 0) {
+          const stmt = db.prepare('INSERT INTO tour_prices (tour_id, price, description, price_order) VALUES (?, ?, ?, ?)');
+          let completed = 0;
+          let hasError = false;
+          
+          prices.forEach((priceItem, index) => {
+            if (priceItem.price !== undefined && priceItem.price !== null) {
+              const price = parseInt(priceItem.price);
+              const description = priceItem.description ? priceItem.description.trim() : null;
+              const priceOrder = priceItem.price_order !== undefined ? parseInt(priceItem.price_order) : index;
+              
+              stmt.run([tourId, price, description, priceOrder], (err) => {
+                if (err && !hasError) {
+                  hasError = true;
+                  reject(err);
+                } else {
+                  completed++;
+                  if (completed === prices.length && !hasError) {
+                    stmt.finalize();
+                    resolve();
+                  }
+                }
+              });
+            } else {
+              completed++;
+              if (completed === prices.length && !hasError) {
                 stmt.finalize();
                 resolve();
               }

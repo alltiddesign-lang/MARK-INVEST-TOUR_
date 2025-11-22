@@ -3,18 +3,24 @@
 const API_URL = '/api';
 let authToken = localStorage.getItem('authToken');
 
-// Проверка авторизации
-if (!authToken) {
-    window.location.href = '/admin/login.html';
-}
-
 // Инициализация
 document.addEventListener('DOMContentLoaded', () => {
-    loadTours();
-    loadApplications();
-    loadStats();
-    loadAdminInfo();
-    updateViewButtons();
+    // Проверка авторизации - не блокируем, разрешаем просмотр туров
+    // Авторизация потребуется только при редактировании
+    if (!authToken) {
+        console.warn('Токен авторизации не найден. Просмотр туров доступен, но редактирование требует авторизации.');
+    }
+    // Инициализация с обработкой ошибок
+    try {
+        loadTours();
+        loadApplications();
+        loadStats();
+        loadAdminInfo();
+        updateViewButtons();
+    } catch (error) {
+        console.error('Ошибка инициализации админ-панели:', error);
+        alert('Ошибка загрузки админ-панели. Проверьте консоль браузера.');
+    }
     
     // Обработчик формы тура
     const tourForm = document.getElementById('tourForm');
@@ -92,6 +98,14 @@ function showTourForm() {
     document.getElementById('imagePreview').innerHTML = '';
     document.getElementById('fileName').textContent = 'Файл не выбран';
     document.getElementById('programs-container').innerHTML = '';
+    document.getElementById('inclusions-included-container').innerHTML = '';
+    document.getElementById('inclusions-excluded-container').innerHTML = '';
+    document.getElementById('prices-container').innerHTML = '';
+    
+    // Очищаем счетчики
+    programDayCounter = 0;
+    inclusionCounter = 0;
+    priceCounter = 0;
     
     // Очищаем галерею
     galleryNewImages = [];
@@ -171,6 +185,9 @@ function cancelTourForm() {
 
 // Добавить день программы
 let programDayCounter = 0;
+let inclusionCounter = 0;
+let priceCounter = 0;
+
 function addProgramDay() {
     const container = document.getElementById('programs-container');
     const dayIndex = programDayCounter++;
@@ -210,6 +227,80 @@ function addProgramDay() {
 // Удалить день программы
 function removeProgramDay(dayIndex) {
     const item = document.querySelector(`.program-day-item[data-day-index="${dayIndex}"]`);
+    if (item) {
+        item.remove();
+    }
+}
+
+// Добавить элемент включения/исключения
+function addInclusionItem(type) {
+    const containerId = `inclusions-${type}-container`;
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const itemIndex = inclusionCounter++;
+    const item = document.createElement('div');
+    item.className = 'inclusion-item';
+    item.dataset.inclusionIndex = itemIndex;
+    item.dataset.inclusionType = type;
+    
+    const label = type === 'included' ? 'Что входит' : 'Не входит';
+    
+    item.innerHTML = `
+        <div class="inclusion-item-header">
+            <div class="inclusion-item-title">${label}</div>
+            <button type="button" class="btn-remove-inclusion" onclick="removeInclusionItem(${itemIndex})">Удалить</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="inclusion_item_${itemIndex}">Элемент</label>
+            <input type="text" id="inclusion_item_${itemIndex}" class="form-input" placeholder="Введите элемент включения/исключения" required>
+        </div>
+    `;
+    
+    container.appendChild(item);
+}
+
+// Удалить элемент включения/исключения
+function removeInclusionItem(itemIndex) {
+    const item = document.querySelector(`.inclusion-item[data-inclusion-index="${itemIndex}"]`);
+    if (item) {
+        item.remove();
+    }
+}
+
+// Добавить поле цены
+function addPriceField() {
+    const container = document.getElementById('prices-container');
+    if (!container) return;
+    
+    const priceIndex = priceCounter++;
+    const priceItem = document.createElement('div');
+    priceItem.className = 'price-item';
+    priceItem.dataset.priceIndex = priceIndex;
+    
+    priceItem.innerHTML = `
+        <div class="price-item-header">
+            <div class="price-item-title">Цена ${priceIndex + 1}</div>
+            <button type="button" class="btn-remove-price" onclick="removePriceField(${priceIndex})">Удалить</button>
+        </div>
+        <div class="price-item-row">
+            <div class="form-group">
+                <label class="form-label" for="price_value_${priceIndex}">Цена (₽)</label>
+                <input type="number" id="price_value_${priceIndex}" class="form-input" placeholder="Введите цену" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="price_description_${priceIndex}">Описание</label>
+                <input type="text" id="price_description_${priceIndex}" class="form-input" placeholder="Например: Взрослый, Детский и т.д.">
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(priceItem);
+}
+
+// Удалить поле цены
+function removePriceField(priceIndex) {
+    const item = document.querySelector(`.price-item[data-price-index="${priceIndex}"]`);
     if (item) {
         item.remove();
     }
@@ -264,6 +355,7 @@ function handleProgramImageSelect(dayIndex, input) {
 // Хранилище для новых изображений галереи
 let galleryNewImages = [];
 let galleryExistingImages = [];
+// Счетчики уже объявлены выше, не объявляем повторно
 
 // Обработка выбора изображений для галереи
 function handleGallerySelect(e) {
@@ -393,6 +485,49 @@ async function handleTourSubmit(e) {
     if (programs.length > 0) {
         formData.append('programs', JSON.stringify(programs));
     }
+
+    // Собираем включения/исключения из динамических полей
+    const inclusions = [];
+    const inclusionItems = document.querySelectorAll('.inclusion-item');
+    inclusionItems.forEach(item => {
+        const inclusionIndex = item.dataset.inclusionIndex;
+        const type = item.dataset.inclusionType;
+        const itemInput = document.getElementById(`inclusion_item_${inclusionIndex}`);
+        
+        if (itemInput && itemInput.value && itemInput.value.trim()) {
+            inclusions.push({
+                item: itemInput.value.trim(),
+                type: type
+            });
+        }
+    });
+    
+    // Добавляем включения/исключения в FormData как JSON строку
+    if (inclusions.length > 0) {
+        formData.append('inclusions', JSON.stringify(inclusions));
+    }
+
+    // Собираем цены из динамических полей
+    const prices = [];
+    const priceItems = document.querySelectorAll('.price-item');
+    priceItems.forEach((item, index) => {
+        const priceIndex = item.dataset.priceIndex;
+        const priceInput = document.getElementById(`price_value_${priceIndex}`);
+        const descriptionInput = document.getElementById(`price_description_${priceIndex}`);
+        
+        if (priceInput && priceInput.value) {
+            prices.push({
+                price: parseInt(priceInput.value),
+                description: descriptionInput ? descriptionInput.value.trim() : null,
+                price_order: index
+            });
+        }
+    });
+    
+    // Добавляем цены в FormData как JSON строку
+    if (prices.length > 0) {
+        formData.append('prices', JSON.stringify(prices));
+    }
     
     try {
         const url = tourId ? `${API_URL}/tours/${tourId}` : `${API_URL}/tours`;
@@ -464,29 +599,48 @@ function updateViewButtons() {
 // Загрузка туров
 async function loadTours() {
     try {
+        console.log('Загрузка туров...');
+        const list = document.getElementById('tours-list');
+        if (!list) {
+            console.error('Элемент tours-list не найден!');
+            return;
+        }
+        
+        // Показываем индикатор загрузки
+        list.innerHTML = '<p style="color: rgba(255,255,255,0.6); text-align: center; padding: 20px;">Загрузка туров...</p>';
+        
+        // GET /api/tours - публичный endpoint, не требует авторизации
+        const headers = {};
+        if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+        
+        console.log('Отправка запроса к', `${API_URL}/tours`);
         const response = await fetch(`${API_URL}/tours`, {
-            headers: {
-                'Authorization': `Bearer ${authToken}`
-            }
+            headers: headers
         });
+        
+        console.log('Ответ получен:', response.status, response.statusText);
         
         if (!response.ok) {
             if (response.status === 401) {
-                // Токен истек или невалидный
+                // Токен истек или невалидный - но не блокируем просмотр
+                console.warn('Токен невалидный, продолжаем без авторизации');
+                authToken = null;
                 localStorage.removeItem('authToken');
-                window.location.href = '/admin/login.html';
+            } else {
+                const errorText = await response.text().catch(() => 'Неизвестная ошибка');
+                console.error('Ошибка загрузки туров:', errorText);
+                list.innerHTML = `<p style="color: #ff6b6b; text-align: center; padding: 20px;">Ошибка загрузки туров: ${response.status} ${response.statusText}</p>`;
                 return;
             }
-            throw new Error(`Ошибка загрузки туров: ${response.status} ${response.statusText}`);
         }
         
         const tours = await response.json();
-        
-        const list = document.getElementById('tours-list');
-        if (!list) return;
+        console.log('Туры получены:', tours?.length || 0, 'туров');
         
         if (!tours || (Array.isArray(tours) && tours.length === 0)) {
-            list.innerHTML = '<p style="color: rgba(255,255,255,0.6);">Туры не найдены</p>';
+            list.innerHTML = '<p style="color: rgba(255,255,255,0.6); text-align: center; padding: 20px;">Туры не найдены</p>';
             return;
         }
         
@@ -496,7 +650,12 @@ async function loadTours() {
         
         list.className = containerClass;
         
-        list.innerHTML = tours.map(tour => {
+        // Очищаем список перед заполнением
+        list.innerHTML = '';
+        
+        // Создаем контейнер для туров
+        // Генерируем HTML для туров
+        const toursHTML = tours.map(tour => {
             // Правильно формируем путь к изображению
             let imageUrl = '';
             if (tour.image_url) {
@@ -562,6 +721,9 @@ async function loadTours() {
             }
         }).join('');
         
+        // Вставляем сгенерированный HTML
+        list.innerHTML = toursHTML;
+        
         updateViewButtons();
     } catch (error) {
         console.error('Ошибка загрузки туров:', error);
@@ -606,10 +768,20 @@ async function editTour(id) {
         document.getElementById('short_description').value = tour.short_description || '';
         document.getElementById('description').value = tour.description || '';
         
-        // Очищаем контейнер программ
+        // Очищаем контейнеры
         const programsContainer = document.getElementById('programs-container');
+        const inclusionsIncludedContainer = document.getElementById('inclusions-included-container');
+        const inclusionsExcludedContainer = document.getElementById('inclusions-excluded-container');
+        const pricesContainer = document.getElementById('prices-container');
+        
         programsContainer.innerHTML = '';
+        if (inclusionsIncludedContainer) inclusionsIncludedContainer.innerHTML = '';
+        if (inclusionsExcludedContainer) inclusionsExcludedContainer.innerHTML = '';
+        if (pricesContainer) pricesContainer.innerHTML = '';
+        
         programDayCounter = 0;
+        inclusionCounter = 0;
+        priceCounter = 0;
         
         // Загружаем программы тура
         if (tour.programs && tour.programs.length > 0) {
@@ -646,6 +818,66 @@ async function editTour(id) {
                 `;
                 
                 programsContainer.appendChild(dayItem);
+            });
+        }
+
+        // Загружаем включения/исключения тура
+        if (tour.inclusions && tour.inclusions.length > 0) {
+            tour.inclusions.forEach(inclusion => {
+                const itemIndex = inclusionCounter++;
+                const item = document.createElement('div');
+                item.className = 'inclusion-item';
+                item.dataset.inclusionIndex = itemIndex;
+                item.dataset.inclusionType = inclusion.type;
+                
+                const label = inclusion.type === 'included' ? 'Что входит' : 'Не входит';
+                const container = inclusion.type === 'included' ? inclusionsIncludedContainer : inclusionsExcludedContainer;
+                
+                item.innerHTML = `
+                    <div class="inclusion-item-header">
+                        <div class="inclusion-item-title">${label}</div>
+                        <button type="button" class="btn-remove-inclusion" onclick="removeInclusionItem(${itemIndex})">Удалить</button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="inclusion_item_${itemIndex}">Элемент</label>
+                        <input type="text" id="inclusion_item_${itemIndex}" class="form-input" placeholder="Введите элемент включения/исключения" value="${inclusion.item || ''}" required>
+                    </div>
+                `;
+                
+                if (container) {
+                    container.appendChild(item);
+                }
+            });
+        }
+
+        // Загружаем цены тура
+        if (tour.prices && tour.prices.length > 0) {
+            tour.prices.forEach(price => {
+                const priceIndex = priceCounter++;
+                const priceItem = document.createElement('div');
+                priceItem.className = 'price-item';
+                priceItem.dataset.priceIndex = priceIndex;
+                
+                priceItem.innerHTML = `
+                    <div class="price-item-header">
+                        <div class="price-item-title">Цена ${priceIndex + 1}</div>
+                        <button type="button" class="btn-remove-price" onclick="removePriceField(${priceIndex})">Удалить</button>
+                    </div>
+                    <div class="price-item-row">
+                        <div class="form-group">
+                            <label class="form-label" for="price_value_${priceIndex}">Цена (₽)</label>
+                            <input type="number" id="price_value_${priceIndex}" class="form-input" placeholder="Введите цену" value="${price.price || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="price_description_${priceIndex}">Описание</label>
+                            <input type="text" id="price_description_${priceIndex}" class="form-input" placeholder="Например: Взрослый, Детский и т.д." value="${price.description || ''}">
+                        </div>
+                    </div>
+                `;
+                
+                if (pricesContainer) {
+                    pricesContainer.appendChild(priceItem);
+                }
             });
         }
         

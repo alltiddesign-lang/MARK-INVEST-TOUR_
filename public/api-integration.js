@@ -637,9 +637,21 @@ function createTravelCard(tour) {
     const fromText = translations.common?.from || 'от';
     const tourText = translations.calendar?.tour || 'Тур';
     
-    // Форматируем цену - сохраняем оригинальную цену в рублях в data-атрибуте
-    // Цена будет отформатирована при переключении валюты
-    const priceText = tour.price ? `${fromText} ${tour.price.toLocaleString('ru-RU')} ₽` : '';
+    // Форматируем цену - используем несколько цен, если они есть, иначе базовую цену
+    let priceText = '';
+    let minPrice = null;
+    
+    if (tour.prices && tour.prices.length > 0) {
+        // Находим минимальную цену из всех цен
+        minPrice = Math.min(...tour.prices.map(p => p.price || 0));
+        if (minPrice > 0) {
+            priceText = `${fromText} ${minPrice.toLocaleString('ru-RU')} ₽`;
+        }
+    } else if (tour.price) {
+        // Используем базовую цену для обратной совместимости
+        minPrice = tour.price;
+        priceText = `${fromText} ${tour.price.toLocaleString('ru-RU')} ₽`;
+    }
     
     // Получаем URL изображения (абсолютный путь)
     const imageUrl = tour.image_url ? (tour.image_url.startsWith('/') ? tour.image_url : `/${tour.image_url}`) : '/assets/images/hero_background-min.jpg';
@@ -682,7 +694,9 @@ function createTravelCard(tour) {
     if (priceText) {
         const priceSpan = document.createElement('span');
         priceSpan.className = 'tour-card-price price';
-        priceSpan.setAttribute('data-price-rub', tour.price || '');
+        if (minPrice) {
+            priceSpan.setAttribute('data-price-rub', minPrice);
+        }
         priceSpan.textContent = priceText;
         metaDiv.appendChild(priceSpan);
     }
