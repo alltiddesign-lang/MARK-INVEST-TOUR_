@@ -114,18 +114,17 @@ function loadToursToSwiper(tours) {
         }
     }
 
-    // Удаляем статические карточки preorderCard, оставляем только туры из БД
-    const staticCards = swiperWrapper.querySelectorAll('.preorderCard:not([data-dynamic-card="true"])');
-    staticCards.forEach(card => {
-        card.remove();
+    // Удаляем все существующие слайды (и статические, и динамические) перед добавлением новых
+    // Это предотвращает задваивание туров
+    const allSlides = swiperWrapper.querySelectorAll('.swiper-slide');
+    allSlides.forEach(slide => {
+        slide.remove();
     });
     
-    // Также удаляем статические слайды
-    swiperWrapper.querySelectorAll('.swiper-slide').forEach(slide => {
-        const staticCard = slide.querySelector('.preorderCard:not([data-dynamic-card="true"])');
-        if (staticCard) {
-            slide.remove();
-        }
+    // Также удаляем карточки напрямую, если они есть вне слайдов
+    const allCards = swiperWrapper.querySelectorAll('.preorderCard');
+    allCards.forEach(card => {
+        card.remove();
     });
 
     // Сортируем туры по дате начала (от ранних к поздним)
