@@ -162,7 +162,14 @@ async function uploadGalleryImages(tourId) {
             });
             
             if (!response.ok) {
-                console.error('Ошибка загрузки изображения в галерею');
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('authToken');
+                    window.location.href = '/admin/login.html';
+                    return;
+                }
+                const errorText = await response.text();
+                console.error('Ошибка загрузки изображения в галерею:', response.status, errorText);
+                throw new Error(`Ошибка загрузки изображения: ${response.status}`);
             }
         } catch (error) {
             console.error('Ошибка загрузки изображения:', error);
@@ -542,7 +549,22 @@ async function handleTourSubmit(e) {
         });
         
         if (!response.ok) {
-            throw new Error('Ошибка сохранения тура');
+            // Если 403 - токен недействителен, перенаправляем на логин
+            if (response.status === 403 || response.status === 401) {
+                localStorage.removeItem('authToken');
+                window.location.href = '/admin/login.html';
+                return;
+            }
+            
+            // Получаем детали ошибки
+            let errorMessage = 'Ошибка сохранения тура';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                errorMessage = `Ошибка ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
         }
         
         const result = await response.json();
@@ -562,10 +584,11 @@ async function handleTourSubmit(e) {
         }
             } catch (error) {
                 console.error('Ошибка:', error);
+                const errorMessage = error.message || 'Ошибка при сохранении тура';
                 if (typeof showError !== 'undefined') {
-                    showError('Ошибка при сохранении тура');
+                    showError(errorMessage);
                 } else {
-                    alert('Ошибка при сохранении тура');
+                    alert(errorMessage);
                 }
             }
 }
@@ -950,7 +973,7 @@ async function loadApplications() {
         });
         
         if (!response.ok) {
-            if (response.status === 401) {
+            if (response.status === 401 || response.status === 403) {
                 localStorage.removeItem('authToken');
                 window.location.href = '/admin/login.html';
                 return;
@@ -1114,7 +1137,7 @@ async function loadStats() {
         });
         
         if (!response.ok) {
-            if (response.status === 401) {
+            if (response.status === 401 || response.status === 403) {
                 localStorage.removeItem('authToken');
                 window.location.href = '/admin/login.html';
                 return;
@@ -1366,7 +1389,12 @@ async function loadAdminInfo() {
         });
         
         if (!response.ok) {
-            throw new Error('Ошибка загрузки информации');
+            if (response.status === 401 || response.status === 403) {
+                localStorage.removeItem('authToken');
+                window.location.href = '/admin/login.html';
+                return;
+            }
+            throw new Error(`Ошибка загрузки информации об администраторе: ${response.status} ${response.statusText}`);
         }
         
         const admin = await response.json();
